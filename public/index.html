@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تفريغ وترجمة الصوت | Voice Transcribe & Translate</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 14px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1e1b4b;
+    }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .settings-btn {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.9rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .settings-btn:hover {
+      background: var(--primary-light);
+      border-color: #c7d2fe;
+      color: var(--primary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+    .status-dot.active { background: var(--success); }
+    .status-dot.missing { background: var(--danger); }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    /* Tabs */
+    .tab-nav {
+      display: flex;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      padding: 0.4rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Upload Zone */
+    .dropzone {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background: #fcfcfd;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .dropzone input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .dropzone-icon {
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .dropzone-text {
+      font-weight: 600;
+      color: #334155;
+      font-size: 1.05rem;
+    }
+
+    .dropzone-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Record Zone */
+    .record-zone {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .mic-button {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: white;
+      font-size: 2.2rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+      transition: transform 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .mic-button:hover {
+      transform: scale(1.05);
+    }
+
+    .mic-button.recording {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      animation: pulse-ring 1.5s infinite;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .rec-timer {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ef4444;
+      margin-top: 1rem;
+      min-height: 1.8rem;
+    }
+
+    .rec-status-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0.4rem;
+    }
+
+    /* Audio preview */
+    .audio-preview {
+      margin-top: 1.25rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 12px;
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .audio-preview.visible {
+      display: flex;
+    }
+
+    .audio-file-info {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .audio-file-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #1e293b;
+      word-break: break-all;
+    }
+
+    .audio-file-size {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    audio {
+      width: 100%;
+      height: 42px;
+      border-radius: 8px;
+    }
+
+    /* Options Grid */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      .options-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    select, input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background: white;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus, input[type="text"]:focus, input[type="password"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    /* Process Button */
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      color: white;
+      border: none;
+      padding: 0.9rem;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+      transition: all 0.2s;
+      margin-top: 1.25rem;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4338ca, #3730a3);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Results */
+    .results-container {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .results-container.visible {
+      display: flex;
+    }
+
+    .result-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .result-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .btn-action {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: #475569;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--primary-light);
+      border-color: #c7d2fe;
+      color: var(--primary);
+    }
+
+    .result-content {
+      background: #f8fafc;
+      border: 1px solid #edf2f7;
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: #1e293b;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 80px;
+    }
+
+    /* Translate again bar */
+    .retranslate-bar {
+      margin-top: 0.8rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      background: #f1f5f9;
+      padding: 0.6rem 0.8rem;
+      border-radius: 10px;
+    }
+
+    .retranslate-bar select {
+      flex: 1;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.9rem;
+    }
+
+    .btn-sm-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-sm-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Rewrite Post Section (Accordion) */
+    .accordion-header {
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #334155;
+    }
+
+    .accordion-body {
+      display: none;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .accordion-body.open {
+      display: block;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e293b;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 30px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal for API Key Settings */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 999;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: white;
+      width: 100%;
+      max-width: 480px;
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading .spinner {
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-title">
+        <div class="logo-badge">🎙️</div>
+        <div>
+          <h1>تفريغ وترجمة الصوت</h1>
+          <p class="subtitle">ضع أي تسجيل صوتي أو سجّل بالمايك واحصل على تفريغ وترجمة فورية</p>
+        </div>
+      </div>
+      <button class="settings-btn" id="openSettingsBtn">
+        <span class="status-dot" id="apiStatusDot"></span>
+        <span>المفاتيح والضبط</span>
+      </button>
+    </header>
+
+    <!-- Main Card -->
+    <div class="card">
+      <!-- Input Mode Tabs -->
+      <div class="tab-nav">
+        <button class="tab-btn active" id="tabUpload" type="button">
+          📁 رفع ملف صوتي
+        </button>
+        <button class="tab-btn" id="tabRecord" type="button">
+          🎙️ تسجيل بالمايكروفون
+        </button>
+      </div>
+
+      <!-- Tab 1: Upload Audio File -->
+      <div id="uploadSection">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="audioFileInput" accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm,.aac,.flac" />
+          <span class="dropzone-icon">📥</span>
+          <div class="dropzone-text">اضغط لاختيار ملف صوت أو اسحبه إلى هنا</div>
+          <div class="dropzone-sub">يدعم ملفات الواتساب، MP3, M4A, WAV, WebM, OGG (حتى 25 ميجابايت)</div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Live Recording -->
+      <div id="recordSection" style="display: none;">
+        <div class="record-zone">
+          <button class="mic-button" id="micBtn" type="button" title="اضغط لبدء أو إيقاف التسجيل">
+            🎙️
+          </button>
+          <div class="rec-timer" id="recTimer"></div>
+          <div class="rec-status-text" id="recStatusText">اضغط على المايكروفون لبدء التسجيل</div>
+        </div>
+      </div>
+
+      <!-- Audio Preview Player -->
+      <div class="audio-preview" id="audioPreview">
+        <div class="audio-file-info">
+          <div class="audio-file-name" id="previewFileName">تسجيل صوتي</div>
+          <div class="audio-file-size" id="previewFileSize"></div>
+        </div>
+        <audio id="audioPlayer" controls></audio>
+      </div>
+
+      <!-- Options Grid -->
+      <div class="options-grid">
+        <div class="form-group">
+          <label class="form-label" for="audioLanguage">لغة الصوت المنطوق:</label>
+          <select id="audioLanguage">
+            <option value="auto" selected>🌐 كشف تلقائي (Auto Detect)</option>
+            <option value="af">الأفريكانية (Afrikaans)</option>
+            <option value="sq">الألبانية (Shqip)</option>
+            <option value="am">الأمهرية (Amharic)</option>
+            <option value="ar_dialect">🇪🇬 العربية (عامية مصرية / دارجة)</option>
+            <option value="ar_msa">📖 العربية (فصحى)</option>
+            <option value="as">الأسامية (Assamese)</option>
+            <option value="hy">الأرمنية (Armenian)</option>
+            <option value="az">الأذربيجانية (Azerbaijani)</option>
+            <option value="eu">الباسكية (Basque)</option>
+            <option value="bn">البنغالية (Bangla)</option>
+            <option value="bs">البوسنية (Bosnian)</option>
+            <option value="bg">البلغارية (Bulgarian)</option>
+            <option value="my">البورمية (Burmese)</option>
+            <option value="pt">البرتغالية (Português)</option>
+            <option value="pl">البولندية (Polski)</option>
+            <option value="pa">البنجابية (Punjabi)</option>
+            <option value="zh">الصينية (中文)</option>
+            <option value="cs">التشيكية (Čeština)</option>
+            <option value="ta">التاميلية (Tamil)</option>
+            <option value="th">التايلاندية (Thai)</option>
+            <option value="tr">التركية (Türkçe)</option>
+            <option value="cy">الويلزية (Welsh)</option>
+            <option value="ka">الجورجية (Georgian)</option>
+            <option value="jw">الجاوية (Javanese)</option>
+            <option value="el">اليونانية (Ελληνικά)</option>
+            <option value="gu">الغوجاراتية (Gujarati)</option>
+            <option value="fa">الفارسية (فارسی)</option>
+            <option value="fi">الفنلندية (Suomi)</option>
+            <option value="fr">الفرنسية (Français)</option>
+            <option value="tl">الفلبينية (Filipino)</option>
+            <option value="hr">الكرواتية (Hrvatski)</option>
+            <option value="km">الخميرية (Khmer)</option>
+            <option value="da">الدنماركية (Dansk)</option>
+            <option value="ru">الروسية (Русский)</option>
+            <option value="ro">الرومانية (Română)</option>
+            <option value="si">السنهالية (Sinhala)</option>
+            <option value="sk">السلوفاكية (Slovenčina)</option>
+            <option value="sl">السلوفينية (Slovenščina)</option>
+            <option value="sw">السواحيلية (Swahili)</option>
+            <option value="sv">السويدية (Svenska)</option>
+            <option value="es">الإسبانية (Español)</option>
+            <option value="sr">الصربية (Srpski)</option>
+            <option value="so">الصومالية (Somali)</option>
+            <option value="he">العبرية (עברית)</option>
+            <option value="id">الإندونيسية (Bahasa Indonesia)</option>
+            <option value="en">الإنجليزية (English)</option>
+            <option value="ur">الأردية (اردو)</option>
+            <option value="uz">الأوزبكية (Uzbek)</option>
+            <option value="uk">الأوكرانية (Українська)</option>
+            <option value="it">الإيطالية (Italiano)</option>
+            <option value="hi">الهندية (हिन्दी)</option>
+            <option value="hu">المجرية (Magyar)</option>
+            <option value="nl">الهولندية (Nederlands)</option>
+            <option value="ja">اليابانية (日本語)</option>
+            <option value="ko">الكورية (한국어)</option>
+            <option value="no">النرويجية (Norsk)</option>
+            <option value="ne">النيبالية (नेपाली)</option>
+            <option value="ha">الهوسا (Hausa)</option>
+            <option value="vi">الفيتنامية (Tiếng Việt)</option>
+            <option value="lo">اللاوية (Lao)</option>
+            <option value="lv">اللاتفية (Latviešu)</option>
+            <option value="lt">الليتوانية (Lietuvių)</option>
+            <option value="ms">الملايوية (Bahasa Melayu)</option>
+            <option value="ml">المالايالامية (Malayalam)</option>
+            <option value="mk">المقدونية (Macedonian)</option>
+            <option value="mr">الماراثية (मराठी)</option>
+            <option value="mn">المنغولية (Mongolian)</option>
+            <option value="de">الألمانية (Deutsch)</option>
+            <option value="te">التيلوغوية (Telugu)</option>
+            <option value="kn">الكانادا (Kannada)</option>
+            <option value="kk">الكازاخية (Kazakh)</option>
+            <option value="ca">الكتالونية (Català)</option>
+            <option value="is">الأيسلندية (Íslenska)</option>
+            <option value="et">الإستونية (Eesti)</option>
+            <option value="ps">البشتوية (Pashto)</option>
+            <option value="haw">لغة هاواي (Hawaiian)</option>
+            <option value="ht">الكريولية الهايتية (Haitian Creole)</option>
+            <option value="fo">الفاروية (Faroese)</option>
+            <option value="gl">الجاليكية (Galician)</option>
+            <option value="la">اللاتينية (Latin)</option>
+            <option value="lb">اللوكسمبورغية (Luxembourgish)</option>
+            <option value="ln">اللينغالا (Lingala)</option>
+            <option value="mg">الملغاشية (Malagasy)</option>
+            <option value="mi">الماورية (Maori)</option>
+            <option value="mt">المالطية (Maltese)</option>
+            <option value="nn">النرويجية نينوشك (Nynorsk)</option>
+            <option value="oc">الأوكسيتانية (Occitan)</option>
+            <option value="sa">السنسكريتية (Sanskrit)</option>
+            <option value="sd">السندية (Sindhi)</option>
+            <option value="sn">الشونا (Shona)</option>
+            <option value="su">السوندانية (Sundanese)</option>
+            <option value="tg">الطاجيكية (Tajik)</option>
+            <option value="tk">التركمانية (Turkmen)</option>
+            <option value="tt">التترية (Tatar)</option>
+            <option value="yi">اليديشية (Yiddish)</option>
+            <option value="yo">اليوروبا (Yoruba)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="targetLanguage">اللغة المراد الترجمة إليها:</label>
+          <select id="targetLanguage">
+            <option value="en" selected>🇬🇧 الإنجليزية (English)</option>
+            <option value="ar_msa">📖 العربية الفصحى</option>
+            <option value="ar_dialect">🇪🇬 العربية العامية (مصرية)</option>
+            <option value="fr">🇫🇷 الفرنسية (Français)</option>
+            <option value="de">🇩🇪 الألمانية (Deutsch)</option>
+            <option value="es">🇪🇸 الإسبانية (Español)</option>
+            <option value="tr">🇹🇷 التركية (Türkçe)</option>
+            <option value="it">🇮🇹 الإيطالية (Italiano)</option>
+            <option value="ru">🇷🇺 الروسية (Русский)</option>
+            <option value="zh">🇨🇳 الصينية (Chinese)</option>
+            <option value="none">❌ بدون ترجمة (تفريغ فقط)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button class="submit-btn" id="submitBtn" type="button">
+        <span class="spinner"></span>
+        <span id="submitBtnText">🚀 تفريغ وترجمة الصوت</span>
+      </button>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-container" id="resultsContainer">
+      <!-- 1) Original Transcription -->
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-title">
+            <span>📝</span>
+            <span>التفريغ النصي الأصلي (Original Text)</span>
+          </div>
+          <div class="action-group">
+            <button class="btn-action" id="speakRawBtn" title="قراءة صوتية">🔊 استماع</button>
+            <button class="btn-action" id="copyRawBtn" title="نسخ النص">📋 نسخ</button>
+          </div>
+        </div>
+        <div class="result-content" id="rawTextContent"></div>
+      </div>
+
+      <!-- 2) Translation -->
+      <div class="result-card" id="translationCard">
+        <div class="result-header">
+          <div class="result-title">
+            <span>🌍</span>
+            <span>الترجمة (Translation)</span>
+          </div>
+          <div class="action-group">
+            <button class="btn-action" id="speakTransBtn" title="قراءة صوتية">🔊 استماع</button>
+            <button class="btn-action" id="copyTransBtn" title="نسخ الترجمة">📋 نسخ</button>
+          </div>
+        </div>
+        <div class="result-content" id="translatedContent"></div>
+        
+        <!-- Quick Re-translate bar -->
+        <div class="retranslate-bar">
+          <span style="font-size: 0.85rem; color: #475569; font-weight: 600;">ترجم إلى:</span>
+          <select id="quickTargetLang">
+            <option value="en">🇬🇧 الإنجليزية (English)</option>
+            <option value="ar_msa" selected>📖 العربية الفصحى</option>
+            <option value="ar_dialect">🇪🇬 العربية العامية (مصرية)</option>
+            <option value="fr">🇫🇷 الفرنسية (Français)</option>
+            <option value="de">🇩🇪 الألمانية (Deutsch)</option>
+            <option value="es">🇪🇸 الإسبانية (Español)</option>
+            <option value="tr">🇹🇷 التركية (Türkçe)</option>
+            <option value="it">🇮🇹 الإيطالية (Italiano)</option>
+            <option value="ru">🇷🇺 الروسية (Русский)</option>
+            <option value="zh">🇨🇳 الصينية (Chinese)</option>
+          </select>
+          <button class="btn-sm-primary" id="retranslateBtn" type="button">ترجم الآن</button>
+        </div>
+      </div>
+
+      <!-- 3) Social Media Post Rewrite (Optional) -->
+      <div class="result-card">
+        <div class="accordion-header" id="postAccordionToggle">
+          <span>📱 تحويل النص لمنشور سوشيال ميديا (اختياري)</span>
+          <span id="accordionArrow">▼</span>
+        </div>
+        <div class="accordion-body" id="postAccordionBody">
+          <div class="options-grid" style="margin-top: 0; padding-top: 0; border: none;">
+            <div class="form-group">
+              <label class="form-label" for="platformSelect">المنصة المستهدفة:</label>
+              <select id="platformSelect">
+                <option value="فيسبوك">فيسبوك (Facebook)</option>
+                <option value="لينكدإن">لينكدإن (LinkedIn)</option>
+                <option value="تويتر (X)">تويتر (X / Twitter)</option>
+                <option value="إنستغرام">إنستغرام (Instagram)</option>
+              </select>
+            </div>
+            <div class="form-group" style="justify-content: flex-end;">
+              <button class="btn-sm-primary" id="generatePostBtn" style="height: 42px;" type="button">
+                ✨ توليد البوست
+              </button>
+            </div>
+          </div>
+          <div style="margin-top: 1rem;">
+            <div class="result-content" id="postContent" style="min-height: 100px;"></div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+              <button class="btn-action" id="copyPostBtn">📋 نسخ البوست</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <h3 class="modal-title">إعدادات مفتاح الذكاء الاصطناعي (API Key)</h3>
+      <p class="modal-desc">
+        يدعم التطبيق مفتاح <strong>Groq المجاني 100%</strong> (بدون أي فيزا أو بطاقة دفع) أو مفتاح OpenAI.
+      </p>
+
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; font-size: 0.85rem; color: #1e40af;">
+        🎁 <strong>للحصول على مفتاح Groq مجاناً في دقيقة واحدة:</strong><br />
+        1. افتح الرابط: <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style="color: #2563eb; font-weight: bold; text-decoration: underline;">console.groq.com/keys</a><br />
+        2. سجّل بحساب Google واضغط <strong>Create API Key</strong>.<br />
+        3. انسخ المفتاح (يبدأ بـ <code>gsk_...</code>) والصقه بالأسفل.
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label class="form-label" for="apiKeyInput">مفتاح API Key (Groq أو OpenAI):</label>
+        <input type="password" id="apiKeyInput" placeholder="gsk_... أو sk-..." />
+        <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+          يمكنك حفظ المفتاح هنا في المتصفح أو في ملف <code>.env</code> في السيرفر.
+        </span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-action" id="closeSettingsBtn" type="button">إلغاء</button>
+        <button class="btn-sm-primary" id="saveSettingsBtn" type="button">حفظ المفتاح</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // State
+    let currentAudioBlob = null;
+    let currentAudioFile = null;
+    let mediaRecorder = null;
+    let recordChunks = [];
+    let recordTimerInterval = null;
+    let recordSeconds = 0;
+
+    // Elements
+    const tabUpload = document.getElementById("tabUpload");
+    const tabRecord = document.getElementById("tabRecord");
+    const uploadSection = document.getElementById("uploadSection");
+    const recordSection = document.getElementById("recordSection");
+    const dropzone = document.getElementById("dropzone");
+    const audioFileInput = document.getElementById("audioFileInput");
+    const micBtn = document.getElementById("micBtn");
+    const recTimer = document.getElementById("recTimer");
+    const recStatusText = document.getElementById("recStatusText");
+    const audioPreview = document.getElementById("audioPreview");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const previewFileName = document.getElementById("previewFileName");
+    const previewFileSize = document.getElementById("previewFileSize");
+    const submitBtn = document.getElementById("submitBtn");
+    const submitBtnText = document.getElementById("submitBtnText");
+    const resultsContainer = document.getElementById("resultsContainer");
+    const rawTextContent = document.getElementById("rawTextContent");
+    const translatedContent = document.getElementById("translatedContent");
+    const translationCard = document.getElementById("translationCard");
+    const audioLanguage = document.getElementById("audioLanguage");
+    const targetLanguage = document.getElementById("targetLanguage");
+    const quickTargetLang = document.getElementById("quickTargetLang");
+    const retranslateBtn = document.getElementById("retranslateBtn");
+    const toast = document.getElementById("toast");
+
+    // Modal elements
+    const openSettingsBtn = document.getElementById("openSettingsBtn");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+    const settingsModal = document.getElementById("settingsModal");
+    const apiKeyInput = document.getElementById("apiKeyInput");
+    const apiStatusDot = document.getElementById("apiStatusDot");
+
+    // Accordion elements
+    const postAccordionToggle = document.getElementById("postAccordionToggle");
+    const postAccordionBody = document.getElementById("postAccordionBody");
+    const accordionArrow = document.getElementById("accordionArrow");
+    const generatePostBtn = document.getElementById("generatePostBtn");
+    const postContent = document.getElementById("postContent");
+
+    // Helper: Show toast notification
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    // Load initial settings & API Status
+    async function checkApiConfig() {
+      const storedKey = localStorage.getItem("ai_custom_key") || localStorage.getItem("openai_custom_key");
+      if (storedKey) {
+        apiKeyInput.value = storedKey;
+      }
+      try {
+        const res = await fetch("/api/config");
+        const data = await res.json();
+        if (data.configured || data.groqConfigured || data.openaiConfigured || storedKey) {
+          apiStatusDot.className = "status-dot active";
+          apiStatusDot.title = "المفتاح جاهز ومفعل";
+        } else {
+          apiStatusDot.className = "status-dot missing";
+          apiStatusDot.title = "المفتاح غير معين";
+        }
+      } catch (e) {
+        if (storedKey) apiStatusDot.className = "status-dot active";
+      }
+    }
+    checkApiConfig();
+
+    // Tab switching
+    tabUpload.onclick = () => {
+      tabUpload.classList.add("active");
+      tabRecord.classList.remove("active");
+      uploadSection.style.display = "block";
+      recordSection.style.display = "none";
+    };
+
+    tabRecord.onclick = () => {
+      tabRecord.classList.add("active");
+      tabUpload.classList.remove("active");
+      uploadSection.style.display = "none";
+      recordSection.style.display = "block";
+    };
+
+    // File Upload handling
+    audioFileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      handleSelectedFile(file);
+    };
+
+    function handleSelectedFile(file) {
+      currentAudioFile = file;
+      currentAudioBlob = null;
+      const url = URL.createObjectURL(file);
+      audioPlayer.src = url;
+      previewFileName.textContent = file.name;
+      previewFileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+      audioPreview.classList.add("visible");
+      showToast("تم اختيار الملف الصوتي بنجاح");
+    }
+
+    // Drag and Drop
+    dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add("dragover"); };
+    dropzone.ondragleave = () => dropzone.classList.remove("dragover");
+    dropzone.ondrop = (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleSelectedFile(e.dataTransfer.files[0]);
+      }
+    };
+
+    // Live Recording
+    micBtn.onclick = async () => {
+      if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+          
+          let mimeType = "audio/webm";
+          if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+            mimeType = "audio/webm;codecs=opus";
+          } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+            mimeType = "audio/mp4";
+          }
+
+          mediaRecorder = new MediaRecorder(stream, { mimeType });
+          recordChunks = [];
+          
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) recordChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            stream.getTracks().forEach((track) => track.stop());
+            clearInterval(recordTimerInterval);
+            const recordedBlob = new Blob(recordChunks, { type: mimeType });
+            currentAudioBlob = recordedBlob;
+            currentAudioFile = null;
+            
+            const url = URL.createObjectURL(recordedBlob);
+            audioPlayer.src = url;
+            previewFileName.textContent = "تسجيل صوتي بالمايكروفون";
+            previewFileSize.textContent = (recordedBlob.size / 1024).toFixed(1) + " KB";
+            audioPreview.classList.add("visible");
+            showToast("تم حفظ التسجيل! يمكنك الاستماع أو الضغط على زر التفريغ.");
+          };
+
+          mediaRecorder.start(250);
+          micBtn.classList.add("recording");
+          micBtn.innerHTML = "⏹️";
+          recStatusText.textContent = "جاري التسجيل الآن... اضغط مجددًا للإيقاف";
+          recordSeconds = 0;
+          updateTimerDisplay();
+          recordTimerInterval = setInterval(() => {
+            recordSeconds++;
+            updateTimerDisplay();
+          }, 1000);
+
+        } catch (err) {
+          console.error(err);
+          alert("تعذر الوصول إلى المايكروفون. يرجى التأكد من إعطاء الصلاحية في المتصفح.");
+        }
+      } else {
+        mediaRecorder.stop();
+        micBtn.classList.remove("recording");
+        micBtn.innerHTML = "🎙️";
+        recStatusText.textContent = "تم إيقاف التسجيل بنجاح";
+      }
+    };
+
+    function updateTimerDisplay() {
+      const mins = String(Math.floor(recordSeconds / 60)).padStart(2, "0");
+      const secs = String(recordSeconds % 60).padStart(2, "0");
+      recTimer.textContent = `${mins}:${secs}`;
+    }
+
+    // Submit for Transcription & Translation
+    submitBtn.onclick = async () => {
+      if (!currentAudioFile && !currentAudioBlob) {
+        alert("يرجى اختيار ملف صوتي أو تسجيل صوت بالمايكروفون أولاً.");
+        return;
+      }
+
+      const formData = new FormData();
+      if (currentAudioFile) {
+        formData.append("audio", currentAudioFile, currentAudioFile.name);
+      } else if (currentAudioBlob) {
+        const ext = currentAudioBlob.type.includes("mp4") ? "m4a" : "webm";
+        formData.append("audio", currentAudioBlob, `recording.${ext}`);
+      }
+
+      formData.append("audioLanguage", audioLanguage.value);
+      formData.append("targetLanguage", targetLanguage.value);
+
+      // Custom API key header
+      const storedKey = localStorage.getItem("ai_custom_key") || localStorage.getItem("openai_custom_key");
+      const headers = {};
+      if (storedKey) {
+        headers["x-api-key"] = storedKey;
+        headers["x-openai-key"] = storedKey;
+      }
+
+      setLoading(true, "جاري رفع ومعالجة الصوت...");
+
+      try {
+        const response = await fetch("/transcribe", {
+          method: "POST",
+          headers,
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "حدث خطأ أثناء التفريغ.");
+        }
+
+        // Show results
+        rawTextContent.textContent = data.text || "(لا يوجد نص مستخرج)";
+        
+        if (targetLanguage.value === "none") {
+          translationCard.style.display = "none";
+        } else {
+          translationCard.style.display = "block";
+          translatedContent.textContent = data.translation || "(لم يتم العثور على ترجمة)";
+          quickTargetLang.value = targetLanguage.value;
+        }
+
+        resultsContainer.classList.add("visible");
+        resultsContainer.scrollIntoView({ behavior: "smooth" });
+
+        if (data.cleaned) {
+          showToast("تم تنظيف تكرار الكلمات التلقائي بنجاح");
+        } else {
+          showToast("تم التفريغ والترجمة بنجاح!");
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert(err.message || "فشلت العملية، يرجى المحاولة لاحقًا.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    function setLoading(isLoading, text = "") {
+      if (isLoading) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add("loading");
+        submitBtnText.textContent = text;
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove("loading");
+        submitBtnText.textContent = "🚀 تفريغ وترجمة الصوت";
+      }
+    }
+
+    // Quick Re-translate
+    retranslateBtn.onclick = async () => {
+      const text = rawTextContent.textContent.trim();
+      if (!text) return;
+
+      const target = quickTargetLang.value;
+      const storedKey = localStorage.getItem("ai_custom_key") || localStorage.getItem("openai_custom_key");
+      const headers = { "Content-Type": "application/json" };
+      if (storedKey) {
+        headers["x-api-key"] = storedKey;
+        headers["x-openai-key"] = storedKey;
+      }
+
+      retranslateBtn.disabled = true;
+      retranslateBtn.textContent = "جاري الترجمة...";
+
+      try {
+        const res = await fetch("/translate", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            text,
+            targetLang: target,
+            sourceLang: audioLanguage.value,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "فشلت الترجمة");
+
+        translatedContent.textContent = data.translation;
+        showToast("تم تحديث الترجمة بنجاح!");
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        retranslateBtn.disabled = false;
+        retranslateBtn.textContent = "ترجم الآن";
+      }
+    };
+
+    // Social Media Rewrite
+    generatePostBtn.onclick = async () => {
+      const text = rawTextContent.textContent.trim();
+      if (!text) {
+        alert("لا يوجد نص مفرغ لتوليد بوست منه.");
+        return;
+      }
+
+      const platform = document.getElementById("platformSelect").value;
+      const storedKey = localStorage.getItem("ai_custom_key") || localStorage.getItem("openai_custom_key");
+      const headers = { "Content-Type": "application/json" };
+      if (storedKey) {
+        headers["x-api-key"] = storedKey;
+        headers["x-openai-key"] = storedKey;
+      }
+
+      generatePostBtn.disabled = true;
+      generatePostBtn.textContent = "جاري الصياغة...";
+
+      try {
+        const res = await fetch("/rewrite", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ text, platform }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "فشل توليد البوست");
+
+        postContent.textContent = data.post;
+        showToast("تم إنشاء البوست بنجاح!");
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        generatePostBtn.disabled = false;
+        generatePostBtn.textContent = "✨ توليد البوست";
+      }
+    };
+
+    // Accordion Toggle
+    postAccordionToggle.onclick = () => {
+      const isOpen = postAccordionBody.classList.contains("open");
+      if (isOpen) {
+        postAccordionBody.classList.remove("open");
+        accordionArrow.textContent = "▼";
+      } else {
+        postAccordionBody.classList.add("open");
+        accordionArrow.textContent = "▲";
+      }
+    };
+
+    // Copy handlers
+    document.getElementById("copyRawBtn").onclick = () => {
+      const text = rawTextContent.textContent;
+      navigator.clipboard.writeText(text).then(() => showToast("تم نسخ النص الأصلي بنجاح!"));
+    };
+
+    document.getElementById("copyTransBtn").onclick = () => {
+      const text = translatedContent.textContent;
+      navigator.clipboard.writeText(text).then(() => showToast("تم نسخ الترجمة بنجاح!"));
+    };
+
+    document.getElementById("copyPostBtn").onclick = () => {
+      const text = postContent.textContent;
+      navigator.clipboard.writeText(text).then(() => showToast("تم نسخ البوست بنجاح!"));
+    };
+
+    // Text-to-speech handlers
+    function speakText(text, lang = "ar") {
+      if (!("speechSynthesis" in window)) {
+        alert("المتصفح لا يدعم ميزة النطق الصوتي.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    document.getElementById("speakRawBtn").onclick = () => {
+      const val = audioLanguage.value;
+      const lang = val.startsWith("ar") || val === "auto" ? "ar-EG" : val;
+      speakText(rawTextContent.textContent, lang);
+    };
+
+    document.getElementById("speakTransBtn").onclick = () => {
+      const val = quickTargetLang.value;
+      const lang = val.startsWith("ar") ? "ar-EG" : val;
+      speakText(translatedContent.textContent, lang);
+    };
+
+    // Settings Modal Handlers
+    openSettingsBtn.onclick = () => settingsModal.classList.add("open");
+    closeSettingsBtn.onclick = () => settingsModal.classList.remove("open");
+    saveSettingsBtn.onclick = () => {
+      const key = apiKeyInput.value.trim();
+      if (key) {
+        localStorage.setItem("ai_custom_key", key);
+        localStorage.setItem("openai_custom_key", key);
+        showToast("تم حفظ مفتاح API بنجاح");
+      } else {
+        localStorage.removeItem("ai_custom_key");
+        localStorage.removeItem("openai_custom_key");
+        showToast("تم مسح المفتاح المحفوظ في المتصفح");
+      }
+      settingsModal.classList.remove("open");
+      checkApiConfig();
+    };
+
+    // PWA Service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
